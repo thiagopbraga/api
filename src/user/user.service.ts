@@ -76,7 +76,7 @@ export class UserService {
     }
 
     return this.prisma.user.update({
-      data: { email, name, password, birthAt, role },
+      data,
       where: {
         id,
       },
