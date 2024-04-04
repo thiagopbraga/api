@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Post,
@@ -14,12 +15,17 @@ import { AuthService } from './auth.service';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { User } from 'src/decorators/user.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { writeFile } from 'node:fs';
 import { join } from 'node:path';
+import { UserService } from 'src/user/user.service';
+import { FileService } from 'src/file/file.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly authService: AuthService,
+    private readonly fileService: FileService,
+  ) {}
 
   @Post('login')
   async login(@Body() { email, password }: AuthLoginDTO) {
@@ -59,8 +65,17 @@ export class AuthController {
       '..',
       'storage',
       'photos',
-      file.originalname,
+      `photo-${user.id}.png`,
     );
-    return { result };
+
+    try {
+      this.fileService.upload(photo, path);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+
+    return {
+      success: true,
+    };
   }
 }
